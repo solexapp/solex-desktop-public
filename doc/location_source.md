@@ -54,7 +54,42 @@ The body of the `POST` request looks like this:
 
 Posting the above data to this endpoint causes `my_location_source` to appear as a location source in Solex's terminal. To follow, type `roi follow my_location_source` in the terminal. Whenever a location is posted to the endpoint, the vehicle following it will be sent a ROI to focus on that point.
 
-It's therefore possible to write a script that sends location data at intervals and cause the vehicle to pan to or follow the location.
+It's therefore possible to write a script that sends location data at intervals and cause the vehicle to pan to or follow the location. Here's an example of a script that reads a file full of JSON objects representing locations and sends them to the server:
+
+```sh
+#!/bin/sh
+
+filename=my_locations.txt
+sourceId=my_location_source
+
+while IFS= read -r line
+do
+    curl --header "Content-Type: application/json" \
+        --request POST \
+        --data "$line" \
+        http://localhost:2112/location
+
+    sleep 5
+
+done < $filename
+
+curl --header "Content-Type: application/json" \
+    --request DELETE \
+    http://localhost:2112/location/$sourceId
+```
+
+The file it reads in this example looks like this:
+```
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618976, "lng": -94.401866, "altAGL": 0}}
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618974, "lng": -94.401864, "altAGL": 0}}
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618972, "lng": -94.401862, "altAGL": 0}}
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618970, "lng": -94.401860, "altAGL": 0}}
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618968, "lng": -94.401858, "altAGL": 0}}
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618966, "lng": -94.401856, "altAGL": 0}}
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618964, "lng": -94.401854, "altAGL": 0}}
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618962, "lng": -94.401852, "altAGL": 0}}
+{"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618960, "lng": -94.401850, "altAGL": 0}}
+```
 
 ### Stopping the flow of locations
 
