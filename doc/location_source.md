@@ -1,14 +1,14 @@
 # Location Sources
 
-_Location Source_ is a generic term for "something that can send location data". The most common/obvious example of this is a vehicle, but location data
-can come from other sources too. For example, a GPS attached to a USB port on the computer running Solex could be used to tell location listeners where the operator currently is. 
+_Location Source_ (`LocationSource`) is a generic term for "something that can send location data". A _Location Listener_ (`LocationListener`) is something that can _receive_ location data. 
 
-When applied strictly to vehicles, a vehicle can observe the movements of another vehicle on the network and take action if desired. For example, it could follow the vehicle at a specific distance and position relative to the target vehicle, or rotate to point at the target vehicle.
+The most common/obvious example of where this might be useful is with vehicles, for example having one vehicle follow another, or pan to look at it as it moves around. 
 
-## Basic commands
+## Basics
 
-In the Terminal in the flight screen with a couple of vehicles connected, type `location sources` and a list of location sources (id and name) will be shown.
-Suppose you have two vehicles, "Copter 101" and "Rover 102". Vehicles in Solex are `LocationSource`s, and register with the `LocationSource` sub-system at the time they connect. So the `location sources` command will display the following:
+In Solex, a `Vehicle` appears in memory to represent a physical (or simulated) vehicle that's been connected. Vehicles in Solex act as both `LocationSource`s and `LocationListener`s. 
+
+In the Terminal in the flight screen with a couple of vehicles connected, type `location sources` and a list will appear. These are current `LocationSources` that can be listened to. The column on the left is the location source's ID. 
 
 ```
 Location Sources:
@@ -24,18 +24,80 @@ vehicle use 101
 location listen vehicle_102
 ```
 
-Now, each time `vehicle_102` moves, Copter 101 will be notified. If it has been commanded to follow or point at a location source, it will do so as `vehicle_102` moves around. To make the listening vehicle actually _do_ something in response to the target vehicle's movement, the upcoming `roi` and `follow` commands can be used.
+Now, each time `vehicle_102` moves, Copter 101 will be notified. If it has been commanded to follow or point at a location source, it will do so as `vehicle_102` moves around. (Note: You can't make a vehicle listen to itself.)
 
-To stop listening to a location source, type `location detach vehicle_102` in the terminal. To detach the current vehicle from _all_ location sources, type `location detach`.
+To stop listening to a location source, type `location detach vehicle_102` in the terminal. To detach the current vehicle from _all_ location sources, type 
+`location detach`.
+
+Note that merely listening to a location source doesn't actually _do_ anything, other than ensuring the listener sees locations as reported by the location source. It's useful for connecting a `LocationSource` to a `LocationListener` and verifying that the connection works properly.
+
+## Actually doing something
+
+`roi` and `follow` commands are available in Solex to make a vehicle follow or pan to a `LocationSource` as it moves. 
+
+### ROI
+
+To make the copter pan to look at the rover as it moves, open the Terminal and type the following commands:
+
+```
+vehicle use 101
+roi follow vehicle_102
+```
+
+Now whenever the rover moves, the copter will pan to look at it. It will do this whether the copter is hovering in Guided mode, or is flying a mission in Auto mode. Whenever it can, the copter will pan to follow the rover's movements.
+
+To stop following ROI, run `roi follow stop` in the Terminal. The copter will go back to its normal yaw.
+
+### Follow
+
+The make the copter _follow_ the rover as it moves, run the following commands in the Terminal:
+
+```
+vehicle use 101
+follow vehicle_102 behind 8
+```
+
+Now, whenever the rover moves, the copter will move to a position 8 meters behind the rover. You can specify different relative positions by specifying `left`, `right`, `ahead` or `behind` in the `follow` command, for example:
+
+```
+follow vehicle_102 right 10
+follow vehicle_102 left 10 smooth
+follow vehicle_102 ahead 20 look smooth
+```
+
+#### `look`
+
+The `look` parameter in the example above specifies that the copter should pan to point at the target vehicle as opposed to just flying alongside it. If specified, the copter will always point at the target vehicle. If not, it will yaw to match the heading of the target vehicle. (Note, this is the travel heading
+of the target vehicle, not its yaw.)
+
+#### `smooth`
+
+Solex includes a ROI estimator to allow smoother movement between locations as they update. When `smooth` is _not_ specified, the following vehicle is instructed to navigate to the last-reported location. If locations arrive at long intervals, say, 5 seconds, the following vehicle will cruise to the specified location and then stop, then start again when a new location is reported. This can lead to a jerkiness in the way the following vehicle moves.
+
+When `smooth` is specified, the ROI estimator synthesizes a stream of locations between the current and last-reported locations, at 5Hz. So if location `a` is reported and then `b` is reported 5 seconds later, the estimator uses the speed (distance / time) between the two locations and generates a path so that a new location is sent to the following vehicle every 200ms. This can be used to eliminate jerkiness when following slow or slowly-updating location sources.
+
+*NOTE:* Be careful with follow when specifying small distances. For example, if you're following behind a vehicle and then run `follow vehicle_102 ahead 10`, the copter will try to get ahead of the target vehicle. If it's a copter following a rover, it should be fine (rovers don't fly). If there are 2 copters involved, it might end with a loud clattering noise and a shower of broken copters after the 2 copters collide in mid air. Another safety measure is to have the following copter fly at a different altitude than the target, so that crossing paths won't result in a collision (the following vehicle doesn't follow the target vehicle's altitude for this reason).
+
+Also: Although it's not possible for a vehicle to follow itself, it _is_ possible for a vehicle to follow another, which could follow the first one. Don't do that. Eventually Solex will contain a safeguard to prevent such a "circular dependency", but until then, that's your job.
+
+Note that it _is_ possible for a followed vehicle to use a following vehicle as a `roi` target, in which case the target vehicle will turn to watch the vehicle that's following it.
 
 
-## External Location Sources
+## Follow something other than a vehicle
 
-Solex provides a web server that you can send locations to, and appear as a location source for a vehicle to follow or otherwise act on. The endpoint is as follows: 
+Solex provides a web server that you can send locations to, at the `POST /location` endpoint. Anything posting appropriately-formatted location data to this endpoint can thus appear in Solex as a `LocationSource`. You could, for example, connect a GPS to a USB port on your laptop and run a program that reads data from it and posts location messages to the server, with a name of `my_cool_gps_thing`. A `location sources` command would show `my_cool_gps_thing` as a location source, and `follow my_cool_gps_thing behind 10` would cause the vehicle to follow it as it moves. 
+
+You could also write a shell script that reads a list of locations from a text file and formulate `POST` requests, allowing a vehicle to follow a previously-recorded track if desired. Below is a quick-and-dirty example of doing that sort of thing.
+
+### Posting locations
+
+As mentioned above, the endpoint is as follows:
 
 ```
 POST /location
 ```
+
+Thus if your computer's IP address is 192.168.1.101 and the Solex web-server port is left at the default value of `2112`, the URL would be `http://192.168.1.101:2112/location`. 
 
 The body of the `POST` request looks like this:
 
@@ -48,13 +110,14 @@ The body of the `POST` request looks like this:
 		altAGL: (alt above ground),
 		altMSL: (optional alt above sea level),
 		heading: (optional direction, 0-359 degrees)
+		speed: (optional speed, used by the ROI estimator)
 	}
 }
 ```
 
 Posting the above data to this endpoint causes `my_location_source` to appear as a location source in Solex's terminal. To follow, type `roi follow my_location_source` in the terminal. Whenever a location is posted to the endpoint, the vehicle following it will be sent a ROI to focus on that point.
 
-It's therefore possible to write a script that sends location data at intervals and cause the vehicle to pan to or follow the location. Here's an example of a script that reads a file full of JSON objects representing locations and sends them to the server:
+Quick and dirty example:
 
 ```sh
 #!/bin/sh
@@ -93,8 +156,14 @@ The file it reads in this example looks like this:
 
 ### Stopping the flow of locations
 
-When you're done sending location data, you can just stop, at which point the vehicle will just hover in the air doing nothing. You can detach from it
-with the `location detach my_location_source` command in the terminal. This works, but is messy. Your now-terminated location source will still show as available from the `location sources` command.
+When you're done sending location data, you can just stop, at which point the vehicle will just hover in the air doing nothing, waiting for another location. Additionally, your location source will continue to show as an active location source, which isn't true. 
 
-So it's advisable to explicitly notify that your location source is finished by calling the `DELETE /location/my_location_source` endpoint. This removes `my_location_source` as a source, and it will no longer show as something a vehicle can follow.
+So when you're finished sending locations, call the `DELETE /location/my_location_source` endpoint to remove your location source. Any following vehicles will be notified, and stop following the source.
+
+## Alternate Listeners
+
+If you have an external program that can make use of location sources, you can also connect to a web socket provided by Solex to be notified of location updates. Connect to the web socket and subscribe to "location/(source_id)", and messages will be sent to your program with the location data, which you can store in a file, forward to a server, etc.
+
+
+
 
