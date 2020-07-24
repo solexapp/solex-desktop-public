@@ -5,7 +5,7 @@
 // TO USE: 
 // Start Solex, and make a note of the webserver port it uses (see Settings). The default is 2112.
 // Start this program as follows (note, you need NodeJS installed):
-// node my_listener.js (ip of machine where Solex is running) (port)
+// node my_listener.js (ip of machine where Solex is running) (port + 1)
 // for example: 
 // node my_listener.js localhost 2113
 //
