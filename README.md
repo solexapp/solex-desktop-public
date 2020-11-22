@@ -2,9 +2,13 @@
 
 ## What it is
 
-Solex Desktop (hereafter called "Solex" to save typing and be kind to the environment) is the desktop implementation of the Solex Android app, intended for people who want to use Solex on Windows, Mac, or Linux machines.
+Solex Desktop is the desktop implementation of the Solex Android app, intended for people who want to use Solex on Windows, Mac, or Linux machines.
 
-## What it isn't
+![Startup screen](images/solex-ss1.png)
+![Flight screen in map mode in a mission](images/solex-ss2.png)
+![Mission editor](images/solex-ss3.png)
+
+## Not a Clone
 
 While it has many similar features to the Android app and looks similar, it's not a clone of it. It's written in a completely different language and doesn't use DroneKit. The presence of a larger screen, higher CPU power, and a keyboard on the host machine makes it reasonable to expect different things from it, and opens up some possibilities for ways of using it that aren't practical in an Android app. This document lays out some of those features, and the basics of how they work.
 
@@ -23,11 +27,11 @@ PX4 and ArduPilot are equally supported in Solex. A mission created for either f
 Solex on Android started out as an app for the 3DR Solo, which had one video source. It was later expanded to include support for RTSP and other video sources. 
 As a result, the Android app has to figure out at runtime what kind of video source it's dealing with, which is complicated. 
 
-Solex on the desktop is intended to be more flexible in this area. If you have a UDP video source (as you likely would on something that works like a Solo), you tell Solex what the IP and port of the UDP source are in the Settings screen. When you open the Flight screen, Solex tries to get data from that source and if it can get it, displays a selector at the bottom of the screen letting you switch between map and video views. An RTSP video source will be added soon.
+Solex on the desktop is intended to be more flexible in this area. If you have a UDP video source (as you likely would on something that works like a Solo), you tell Solex what the IP and port of the UDP source are in the Settings screen. When you open the Flight screen, Solex tries to get data from that source and if it can get it, displays a selector at the bottom of the screen letting you switch between map and video views. TCP video also works, with different "visual effects" present when the network connection is sub-optimal. An RTSP video source will be added soon.
 
-Latency on the UDP source is verified to be in the 50ms range using a command line like this for testing:
+Latency on the UDP source is verified to be in the 50ms range using a command line like this for streaming:
 ```
-ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 -f mpegts -codec:v mpeg1video -s 640x480 -b:v 1000k -bf 0 udp://192.168.2.255:5000
+ffmpeg -f v4l2 -framerate 30 -video_size 1280x720 -i /dev/video0 -f mpegts -codec:v mpeg1video -s 640x360 -b:v 1000k -bf 0
 ```
 
 ### Vehicle console
