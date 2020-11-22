@@ -32,8 +32,8 @@ ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 -f mpegts -codec
 
 ### Vehicle console
 
-As mentioned above, the presence of a keyboard on a computer opens up some possibilities. Solex has a "vehicle console" that presents a command line for controlling the vehicle. It's similar to the "mavproxy" tool familiar to ArduPilot developers, but not _actually_ mavproxy, and not the _same_ as mavproxy. 
-You can arm, disarm, launch, land, start missions, stop missions, skip around in missions, point the vehicle at ROIs, etc. You can extend the console to 
+Solex has a "vehicle console" that presents a command line for controlling the vehicle. It's similar to the "mavproxy" tool familiar to ArduPilot developers, but not _actually_ mavproxy, and not the _same_ as mavproxy. 
+You can arm, disarm, launch, land, start missions, stop missions, skip around in missions, point the vehicle at ROIs, etc. You can also extend the console to 
 include whatever commands you want.
 
 Here's a set of commands you might use to launch a mission:
@@ -72,6 +72,7 @@ turn by -80					# turn left 80 degrees
 
 There are also commands for retrieving and setting parameters:
 ```
+param show COMPASS          # Show all params/values starting with "COMPASS"
 param set COMPASS_LEARN 1	# turn on compass learning
 param show COMPASS_LEARN	# verify it's turned on
 param show wp 				# View all params with "WP" in their name
@@ -81,6 +82,7 @@ Setting modes:
 ```
 mode auto					# Switch to AUTO
 mode rtl 					# Switch to RTL
+mode asdf                   # Mode name doesn't exist; Will show a list of available modes
 ```
 
 The available modes vary by whether the vehicle is Ardupilot or PX4, so `mode auto` on PX4 won't work. If you're at a loss as to what modes are available, just 
@@ -95,42 +97,14 @@ marker around to change the ROI location, or right-click it to clear it.
 
 ### Extensions
 
-Another cool thing about running on a desktop machine is that it makes more sense to extend Solex to do whatever you're interested in doing. So Solex supports the idea of extensions for specific things.
+You can write simple classes and scripts to extend Solex to suit what you're interested in doing. You can extend the UI of the flight screen to add 
+buttons and other controls to it. You can make custom mission items. You can add custom commands to the vehicle console. You can create your own interface
+to a camera or other devices you might have attached to your vehicle. See the `examples` folder to read about each of the extension types.
 
-#### Custom mission items
+#### Installing the Extensions
 
-Suppose you've gotten into the business of surveying the roofs of large buildings at an angle. That's kind of uncommon, so there's nothing in Solex that does that out of the box. But you can _make_ a mission item that does that. It's not exactly trivial to do, but you can specify custom fields for your mission item, give it your own icon, have it draw its path on the map however you like, and so on. You can test it all in SITL on PX4 or Ardupilot and verify it works as expected. Once you're done, you're now set to dominate the world of slanted roof surveys.
+Simple! Open the `examples` folder, and drag each of the folders in it to the `ext` folder in your `Solex` directory. Then when you start Solex, the extensions will be available.
 
-#### Custom commands
-
-Custom commands are easy to add to the console. Here's an example of one that lands the vehicle:
-
-```javascript
-const Vehicle = require("lib/drone/Vehicle");
-
-function performLandCommand() {
-    Vehicle.land();
-    return "Start landing"; // Always return a value, otherwise the console will report that the command is not understood.
-}
-
-exports.processCommand = (input) => {
-    if(input.toLowerCase() == "land") {
-        return performLandCommand();
-    }
-
-    return null;
-};
-
-exports.handlesKeyword = (word) => word.toLowerCase() == "land";
-
-exports.getHelp = () => {
-    return `land\tLand the vehicle\tUsage: land`;
-}
-```
-
-#### Custom video sources
-
-If you have a video source that is neither UDP or RTSP, you can build your own video source using FFMpeg or gstreamer and have it push an MPEG.TS stream to a websocket. 
 
 
 
