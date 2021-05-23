@@ -36,7 +36,9 @@ ffmpeg -f v4l2 -framerate 30 -video_size 1280x720 -i /dev/video0 -f mpegts -code
 
 ### Vehicle console
 
-Solex has a "vehicle console" that presents a command line for controlling the vehicle. It's similar to the "mavproxy" tool familiar to ArduPilot developers, but not _actually_ mavproxy, and not the _same_ as mavproxy. 
+Solex has a "vehicle console" that presents a command line for controlling the vehicle. It's similar to the "mavproxy" tool familiar to ArduPilot developers, but not _actually_ mavproxy, and not the _same_ as mavproxy. So if you find yourself wondering "Why doesn't this do _X_ like mavproxy does?" It's because it's
+_not `mavproxy`_.
+
 You can arm, disarm, launch, land, start missions, stop missions, skip around in missions, point the vehicle at ROIs, etc. You can also extend the console to 
 include whatever commands you want.
 
@@ -65,7 +67,7 @@ roi clear					# Clear the ROI
 
 You can also "drive around":
 ```
-go south 100				# Obvious!
+go south 100				# Just what it says
 go ne 20					# "ne" is northeast
 go back 15					# back up 15m
 go forward 10				# go forward 10m
@@ -80,6 +82,11 @@ param show COMPASS          # Show all params/values starting with "COMPASS"
 param set COMPASS_LEARN 1	# turn on compass learning
 param show COMPASS_LEARN	# verify it's turned on
 param show wp 				# View all params with "WP" in their name
+param refresh				# Reload/refresh params from the vehicle
+param save (filename)		# Save the current parameters in a file in the `params` directory with the specified name.
+param load (filename)		# Load the params in `filename` and display them.
+param load (filename)		# Apply the params in `filename` to the vehicle. Note that this doesn't have to be ALL of the params. You can put any number of params in a file.
+param diff (filename)		# Compare the contents of `filename` with params on the vehicle and show the differences.
 ```
 
 Setting modes:
@@ -89,9 +96,18 @@ mode rtl 					# Switch to RTL
 mode asdf                   # Mode name doesn't exist; Will show a list of available modes
 ```
 
+Showing vehicle state:
+```
+state attitude				# Show internal vehicle attitude
+state altitude				# Show internal vehicle altitude
+state version				# Show vehicle version
+state help					# Show all available state commands
+```
+
+At any time, you can type `help` to get a list of commands or `help (command)` to get help for a particular command.
+
 The available modes vary by whether the vehicle is Ardupilot or PX4, so `mode auto` on PX4 won't work. If you're at a loss as to what modes are available, just 
 type a `mode` command anyway. Something like `mode i have no idea` will give you a list of available modes, rather than an error message. 
-
 
 You can type `help` to get a list of all commands and how to use them, and `help (command)` to get help on a specific command.
 

@@ -48,6 +48,7 @@ function getCameraDefs() {
     return out;
 }
 
+// This controls what appears in the property sheet for a mission item in the UI.
 const MissionItemType = Object.freeze({
     DOUBLE_SURVEY: {
         id: "double_survey", name: "Double Survey",
