@@ -29,9 +29,8 @@ const DEF_SIDELAP = 60;
 
 function clampAngle(main, input) {
     let output = main + input;
-    if(output >= 360) {
-        output -= 360;
-    }
+    if(output >= 360) { output -= 360; }
+    if(output < 0) { output += 360; }
     return output;
 }
 
@@ -51,14 +50,15 @@ function getCameraDefs() {
 // This controls what appears in the property sheet for a mission item in the UI.
 const MissionItemType = Object.freeze({
     DOUBLE_SURVEY: {
-        id: "double_survey", name: "Double Survey",
+        id: "double_survey", name: "2-pass Survey",
         is_spatial: true,
         icon_class: "survey",
         sub_marker_class: "pin",
         input_points_type: "polygon",
         fields: [
-            { id: "angle", name: "Angle", type: FieldType.NUMBER, range_min: 0, range_max: 359, unit: Unit.ANGLE, get: (item) => item.angle || 0, set: (item, value) => { item.angle = parseFloat(value) } },
-            { id: "subAngle", name: "Sub angle", type: FieldType.NUMBER, range_min: 0, range_max: 359, unit: Unit.ANGLE, get: (item) => item.subAngle || 0, set: (item, value) => { item.subAngle = parseFloat(value) } },
+            { id: "subAltitude", name: "Pass 2 alt", type: FieldType.NUMBER, range_min: 0, unit: Unit.DISTANCE, get: (item) => item.subAltitude || 0, set: (item, value) => { item.subAltitude = parseFloat(value) } },
+            { id: "angle", name: "Pass 1 angle", type: FieldType.NUMBER, range_min: 0, range_max: 359, unit: Unit.ANGLE, get: (item) => item.angle || 0, set: (item, value) => { item.angle = parseFloat(value) } },
+            { id: "subAngle", name: "Pass 2 angle", type: FieldType.NUMBER, range_min: 0, range_max: 359, unit: Unit.ANGLE, get: (item) => item.subAngle || 0, set: (item, value) => { item.subAngle = parseFloat(value) } },
             { id: "overlap", name: "Overlap", type: FieldType.NUMBER, range_min: 0, range_max: 359, get: (item) => item.overlap || DEF_OVERLAP, set: (item, value) => { item.overlap = parseFloat(value) } },
             { id: "sidelap", name: "Sidelap", type: FieldType.NUMBER, range_min: 0, range_max: 359, get: (item) => item.sidelap || DEF_SIDELAP, set: (item, value) => { item.sidelap = parseFloat(value) } },
             { id: "lockOrientation", name: "Lock orientation", type: FieldType.BOOLEAN, get: (item) => item.lockOrientation || false, set: (item, value) => { item.lockOrientation = (value) ? true : false } },
@@ -82,6 +82,7 @@ class DoubleSurvey extends ComplexMissionItem {
         super(MissionItemType.DOUBLE_SURVEY)
         this.angle = 0;
         this.subAngle = 20;
+        this.subAltitude = 0;
         this.overlap = 50;
         this.sidelap = 50;
         this.lockOrientation = false;
@@ -98,6 +99,7 @@ class DoubleSurvey extends ComplexMissionItem {
         return Object.assign({
             location: this.location,
             angle: this.angle,
+            subAltitude: this.subAltitude,
             subAngle: this.subAngle,
             overlap: this.overlap,
             sidelap: this.sidelap,
@@ -116,6 +118,7 @@ class DoubleSurvey extends ComplexMissionItem {
         this.location = input.location;
         this.angle = input.angle;
         this.subAngle = input.subAngle;
+        this.subAltitude = input.subAltitude;
         this.overlap = input.overlap;
         this.sidelap = input.sidelap;
         this.lockOrientation = input.lockOrientation;
@@ -157,11 +160,11 @@ class DoubleSurvey extends ComplexMissionItem {
         return this;
     }
 
-    getLateralPictureDistance() {
+    getLateralPictureDistance(altitude) {
         const detail = this.surveyDetail;
         if (detail && detail.setAltitude && detail.getLateralPictureDistance) {
             detail
-                .setAltitude(this.location.alt)
+                .setAltitude(altitude || this.location.alt)
                 .setAngle(this.angle)
                 .setOverlap(this.overlap)
                 .setSidelap(this.sidelap);
@@ -171,11 +174,11 @@ class DoubleSurvey extends ComplexMissionItem {
         return 10;
     }
 
-    getLongitudinalPictureDistance() {
+    getLongitudinalPictureDistance(altitude) {
         const detail = this.surveyDetail;
         if (detail && detail.setAltitude && detail.getLongitudinalPictureDistance) {
             detail
-                .setAltitude(this.location.alt)
+                .setAltitude(altitude || this.location.alt)
                 .setAngle(this.angle)
                 .setOverlap(this.overlap)
                 .setSidelap(this.sidelap);
@@ -191,7 +194,7 @@ class DoubleSurvey extends ComplexMissionItem {
         const msg = super.baseMissionItem(mavlink.MAV_CMD_NAV_WAYPOINT);
         msg.x = pt.lat;
         msg.y = pt.lng;
-        msg.z = this.getAltitude();
+        msg.z = pt.alt || this.getAltitude();
         return msg;
     }
 
@@ -201,10 +204,18 @@ class DoubleSurvey extends ComplexMissionItem {
 
         new CameraTrigger(0).toMissionItems().forEach((item) => items.push(item));
 
-        const picDistance = this.getLongitudinalPictureDistance();
         const surveyAngle = this.angle;
-        let reverseAngle = surveyAngle + 180;
-        if (reverseAngle >= 360) reverseAngle -= 360;
+        const subAngle = clampAngle(surveyAngle, this.subAngle);
+        const reverseAngle = clampAngle(surveyAngle, 180);
+        const reverseSub = clampAngle(subAngle, 180);
+
+        function isRunAngle(angle) {
+            if(Math.abs(surveyAngle - angle) < 0.5) return true;
+            if(Math.abs(reverseAngle - angle) < 0.5) return true;
+            if(Math.abs(subAngle - angle) < 0.5) return true;
+            if(Math.abs(reverseSub - angle) < 0.5) return true;
+            return false;
+        }
 
         path.forEach((p) => {
             items.push(this.toMissionItem(p));
@@ -213,8 +224,9 @@ class DoubleSurvey extends ComplexMissionItem {
                 const next = path[path.indexOf(p) + 1];
                 if (next) {
                     const runAngle = MathUtils.getHeadingFromCoordinates(p, next);
+                    const picDistance = this.getLongitudinalPictureDistance(p.alt);
 
-                    if (Math.abs(surveyAngle - runAngle) < 0.5 || Math.abs(reverseAngle - runAngle) < 0.5) {
+                    if (isRunAngle(runAngle)) {
                         new CameraTrigger(picDistance).toMissionItems().forEach(item => items.push(item));
                     }
                 }
@@ -243,21 +255,23 @@ class DoubleSurvey extends ComplexMissionItem {
 
         const subAngle = clampAngle(this.angle, this.subAngle);
         [this.angle, subAngle].forEach((angle) => {
+            let altitude = this.getAltitude();
+
+            // If on pass 2 and a pass-2 altitude was specified, use that for the second grid.
+            if (subAngle == angle && this.subAltitude > 0) {
+                altitude = this.subAltitude;
+            }
+
             const poly = new Polygon().addPoints(this.polygonInfo.points);
             const options = {
                 angle: angle || 0,
-                wpDistance: this.getLongitudinalPictureDistance(),
-                lineDistance: this.getLateralPictureDistance()
+                wpDistance: this.getLongitudinalPictureDistance(altitude),
+                lineDistance: this.getLateralPictureDistance(altitude)
             };
 
             const gridBuilder = new GridBuilder(poly, options);
             const grid = gridBuilder.generateGrid(false);
 
-            // Probably useful to report this somewhere.
-            // const totalDistance = grid.getLength();
-            // const lineCount = grid.getNumberOfLines();
-
-            const altitude = this.getAltitude();
             // const points = grid.getCameraLocations();
             const points = grid.gridPoints;
             points.forEach((point) => {
