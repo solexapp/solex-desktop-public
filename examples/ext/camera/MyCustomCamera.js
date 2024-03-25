@@ -1,6 +1,6 @@
 'use strict';
 
-const { CameraInterface } = require("app/video/CameraInterface");
+const { CameraInterface } = req("app/video/CameraInterface");
 
 class MyCustomCamera extends CameraInterface {
     constructor() {
@@ -8,7 +8,7 @@ class MyCustomCamera extends CameraInterface {
     }
     
     takePicture(callback) {
-        callback(new Error("Someday, I should implement this"), false);
+        callback(new Error("Hi, I'm the custom camera that does nothing"), false);
     }
     
     toggleRecording(callback) {
@@ -19,4 +19,12 @@ class MyCustomCamera extends CameraInterface {
 }
 
 exports.newInstance = () => { return new MyCustomCamera(); }
+
+exports.getInterface = () => {
+    return {
+        id: "mycamera", 
+        name: "My Camera", 
+        description: "No-op demo custom camera interface"
+    };
+}
 

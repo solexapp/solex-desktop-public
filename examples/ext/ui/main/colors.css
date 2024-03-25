@@ -1,0 +1,26 @@
+:root {
+    --color-primary: #454545;
+    --color-primary-dark: #242424;
+    --color-accent: white;
+    --color-err-text: white;
+    --color-warn-text: yellow;
+    --color-almost-white: #dfdfdf;
+    --color-white: white;
+    --dialog-background-color: #343434;
+    --table-border: darkgray;
+    --color-terminal: #66ff00;
+    --color-hilite: gray;
+    --color-main-background: #252525;
+    --color-background-medium: #454545;
+    --color-detail-header: darkblue;
+    --color-background-dark: #343434;
+    --color-background-darker: #232323;
+    --color-err-background: #DD0000;
+    --color-err-red: #DD0000;
+    --color-placeholder: lightgray;
+    --color-draw-area-container: blue;
+    --color-err-text: white;
+    --color-warn-text: yellow;
+    --dialog-background-color: #343434;
+    --table-border: darkgray;
+}
