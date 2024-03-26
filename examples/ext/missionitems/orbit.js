@@ -1,7 +1,7 @@
 'use strict';
 
-const mission_types = require("lib/mission/mission_types");
-const MathUtils = require("lib/util/MathUtils");
+const mission_types = req("lib/mission/mission_types");
+const MathUtils = req("lib/util/MathUtils");
 
 const { VehicleType, SpatialMissionItem, FieldType, Unit } = mission_types;
 
