@@ -9,13 +9,14 @@ const TAG = "PathLocationSource";
 function d(str) { console.log(`${TAG}: ${str}`); }
 function e(str) { console.error(`${TAG}: ${str}`); }
 
-let sideDistance = 100;
+let sideDistance = 300;
 let startLocation = null;
 let points = [];
 let pointIndex = 0;
-let speedMS = 5; // TODO: Make this adjustable via commands
+let speedMS = 8;
 let updateInterval = 1000/speedMS;
 let sendInterval = 1000; // ms
+let alt = 0;
 
 const SOURCE_ID = "testpath";
 const LISTENER_ID = "TestLocationSource";
@@ -57,7 +58,9 @@ function generatePathBetween(start, end, speedMs) {
     const stepSize = 1;
     
     for(let dist = stepSize; dist < distance; dist += stepSize) {
-        output.push(MathUtils.newCoordFromBearingAndDistance(start, heading, dist));
+        const pt = MathUtils.newCoordFromBearingAndDistance(start, heading, dist);
+        if(alt > 0) pt.alt = alt;
+        output.push(pt);
     }
 
     return output;
@@ -159,6 +162,16 @@ exports.handleCommand = (words) => {
                     return `${SOURCE_ID}: interval updated to ${interval} ms`;
                 } else {
                     return `${SOURCE_ID}: interval must be a number`
+                }
+            }
+            
+            case "alt": {
+                const input = parseFloat(t[1]);
+                if(!isNaN(input)) {
+                    alt = input;
+                    return `${SOURCE_ID}: Alt set to ${alt}m`;
+                } else {
+                    return `${SOURCE_ID}: Alt must be a number`;
                 }
             }
 

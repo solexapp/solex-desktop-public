@@ -1,6 +1,6 @@
 'use strict';
 
-const Vehicle = require("lib/drone/VehicleShell");
+const VehicleShell = req("lib/drone/VehicleShell");
 
 function performLandCommand() {
     VehicleShell.land();
