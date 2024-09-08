@@ -4,7 +4,6 @@ const fs = require("fs");
 const path = require("path");
 const ConsoleLog = req("lib/util/ConsoleLog");
 const DroneInterface = req("app/DroneInterface");
-const VehicleShell = req("lib/drone/VehicleShell");
 const { CameraControl } = req("app/video/CameraControl");
 
 const TAG = path.basename(__filename, ".js");
@@ -119,22 +118,8 @@ exports.init = () => {
         name: "Timed Photo",
         description: "Takes timed photos while flying",
         params: [
-            { id: "enabled", name: "Enabled", type: "boolean", default: true, get: (x) => x.enabled, set: (x, value) => { x.enabled = value } },
-            { id: "photo_interval_seconds", name: "Photo interval (s)", type: "number", default: 5, 
-                get: (x) => x.photoInterval, 
-                set: (x, value) => {
-                x.photoInterval = value
-                }
-            },
-            { id: "pick", name: "Pick field", type: "enum", 
-                get: (x) => x.pick_field, 
-                set: (x, value) => { x.pick_field = value },
-                values: [
-                    { id: "pick_1", name: "Pick 1" },
-                    { id: "pick_2", name: "Pick 2" },
-                    { id: "pick_3", name: "Pick 3" },
-                ]
-            }
+            { id: "enabled", name: "Enabled", type: "boolean" },
+            { id: "photo_interval_seconds", name: "Photo interval (s)", type: "number" }
         ]
     };
 }
@@ -144,6 +129,7 @@ exports.close = () => {
     t(`close()`)
 }
 
+// Called when the vehicle connects or disconnects
 exports.onVehicleConnectState = (vehicle, connected) => {
     t(`onVehicleConnectState(): connected=${connected}`);
 
@@ -154,10 +140,14 @@ exports.onVehicleConnectState = (vehicle, connected) => {
     }
 }
 
+// Return this plugin's configuration
 exports.getConfig = () => {
     return serviceConfig;
 }
 
+// Save this plugin's configuration.
+// If the plugin is currently doing something, you'll most likely want to restart whatever it's doing 
+// for the changes made by the user to take effect.
 exports.setConfig = (config) => {
     Object.assign(serviceConfig, config);
     e(`setConfig(): ${JSON.stringify(serviceConfig)}`);
