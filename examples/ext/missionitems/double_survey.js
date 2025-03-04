@@ -1,6 +1,6 @@
 'use strict';
 
-const mission_types = req("lib/mission/mission_types.js");
+const mission_types = req("lib/mission/mission_types");
 const MathUtils = req("lib/util/MathUtils");
 
 const {

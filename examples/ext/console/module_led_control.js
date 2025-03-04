@@ -1,7 +1,7 @@
 'use strict';
 
 const Vehicle = req("lib/drone/VehicleShell");
-const { mavlink10 } = req("lib/mavlink/mavlink.js");
+const { mavlink10 } = req("lib/mavlink/mavlink");
 const mavlink = mavlink10;
 
 function processLEDCommand(cmd) {
