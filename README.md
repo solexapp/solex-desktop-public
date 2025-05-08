@@ -125,6 +125,10 @@ to a camera or other devices you might have attached to your vehicle. See the `e
 
 Simple! Open the `examples` folder, and drag each of the folders in it to the `ext` folder in your `Solex` directory. Then when you start Solex, the extensions will be available.
 
+### Links
+
+- [Location Sources](doc/location_source.md)
+- [External Channels](doc/ext-channels.md)
 
 
 
