@@ -61,3 +61,25 @@ const proc = ExternalProcShell.launch({
 ```
 
 The UI code would be largely the same, except the data is coming from a local process instead of a remote one.
+
+### Using with a vehicle
+
+Solex currently supports the placement of configuration files in the `Solex/ext/vehicle_ext_channel` directory for specific vehicle types. The types are:
+
+- `copter`
+- `plane`
+- `rover`
+- `vtol`
+- `boat`
+
+Place a file named (for example) `boat.json` in this directory with contents like this:
+
+```json
+{
+	"connections": [
+		{ "type": "udp", "port": 3456, "channel": "engine", "parser": "json" }
+	]
+}
+```
+
+When connecting to ArduRover with a `FRAME_CLASS` param of `2` (boat), Solex will load this file and create an `engine` channel. Any parseable JSON data sent to the ground station's host computer's IP on port 3456 will be parsed and events will be emitted on the `engine` channel as the values change. Components in the app (e.g. UI components) can then subscribe to the `engine` channel and display the values they receive.
