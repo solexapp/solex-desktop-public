@@ -154,6 +154,47 @@ The file it reads in this example looks like this:
 {"source": {"id": "my_location_source", "name": "My Location Source"}, "where": {"lat": 38.618960, "lng": -94.401850, "altAGL": 0}}
 ```
 
+### External channel `ext_location`
+
+You can also make an external input channel to Solex and specify locations from there. This is handy if, for example, you have a GPS attached to your device and you want to get locations from it and send them to Solex so a connected vehicle can see the locations and act on them if desired.
+
+You do this by receiving location data from the GPS and converting it into JSON objects that look like this:
+
+```json
+    location: {
+        // Don't remove this location source if idle/missing for up to 20s
+        "dead_time_ms": 10000,
+        "source": {
+            "id": "my_cool_gps",
+            "name": "My cool GPS",
+            "description": "My cool GPS, like I said"
+        },
+        "where": {
+            "lat": <lat>, lng: <lng>, alt: <alt>
+        }
+    }
+```
+
+Create a configuration file that looks like this:
+
+```json
+{
+    "connections": [
+        { "type": "udp", "port": 6789, "channel": "ext_location", "parser": "json" }        
+    ]
+}
+
+```
+
+...and save it in the `Solex/ext/ext_channel` directory.
+
+When Solex starts, it will start listening for UDP packets on port `6789` and emitting on the `ext_location` channel. The `LocationSource` framework in Solex listens on this channel and any `location` events arriving on it are processed as external locations. 
+
+From Solex's flight screen, you can open the terminal and type `location sources` and you'll see `my_cool_gps` included in them. When your vehicle is flying in Guided mode (or for a rover, just in Guided mode and armed), you can type `follow my_cool_gps behind 5` and your vehicle 
+will start following the locations arriving via `my_cool_gps`. Stop following by running `follow stop` in the terminal.
+
+The `dead_time_ms` param is optional, and specifies to `LocationSource` that it shouldn't drop your location source any sooner than the specified number of milliseconds. If you don't specify this, the timeout is 5s, at which point your `my_cool_gps` location source will be dropped. The `name` and `description` params are also optional.
+
 ### Stopping the flow of locations
 
 When you're done sending location data, you can just stop, at which point the vehicle will just hover in the air doing nothing, waiting for another location. Additionally, your location source will continue to show as an active location source, which isn't true. 
