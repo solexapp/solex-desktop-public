@@ -83,3 +83,10 @@ Place a file named (for example) `boat.json` in this directory with contents lik
 ```
 
 When connecting to ArduRover with a `FRAME_CLASS` param of `2` (boat), Solex will load this file and create an `engine` channel. Any parseable JSON data sent to the ground station's host computer's IP on port 3456 will be parsed and events will be emitted on the `engine` channel as the values change. Components in the app (e.g. UI components) can then subscribe to the `engine` channel and display the values they receive.
+
+### Global Channels
+
+You can also define global connections that start without connecting to a vehicle. Place a file in `Solex/ext/ext_channel` with the same layout as shown above. When Solex starts, it will scan this directory for any configuration files and if they match this layout, it will load them 
+and create channels that they specify. Then other extensions can listen on those channels for data, and act on it.
+
+One channel name, `ext_location`, is listened to automatically by Solex's `LocationListener` framework and allows an external process to send location data that Solex interprets as a location source that connected vehicles can interact with. 
