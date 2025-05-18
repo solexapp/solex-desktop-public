@@ -160,7 +160,7 @@ You can also make an external input channel to Solex and specify locations from 
 
 You do this by receiving location data from the GPS and converting it into JSON objects that look like this:
 
-```json
+```javascript
     location: {
         // Don't remove this location source if idle/missing for up to 20s
         "dead_time_ms": 10000,
@@ -194,6 +194,9 @@ From Solex's flight screen, you can open the terminal and type `location sources
 will start following the locations arriving via `my_cool_gps`. Stop following by running `follow stop` in the terminal.
 
 The `dead_time_ms` param is optional, and specifies to `LocationSource` that it shouldn't drop your location source any sooner than the specified number of milliseconds. If you don't specify this, the timeout is 5s, at which point your `my_cool_gps` location source will be dropped. The `name` and `description` params are also optional.
+
+Here's an [example location sender] (../examples/channel_sender/ext_location_flightlog.js) that takes the path of a Solex flight log (recorded by running `flightlog record start 1` from the terminal and then saving it after the flight), and plays it back at the rate it was recorded.
+
 
 ### Stopping the flow of locations
 
