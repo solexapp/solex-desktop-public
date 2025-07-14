@@ -1,0 +1,59 @@
+{
+    "name": "Sample checklist",
+    "colors": {
+        "pass": "#00ff00",
+        "fail": "#FF0000"
+    },
+    "checks": [
+        {
+            "name": "GPS Fix type",
+            "type": "auto",
+            "prop": "gps.fixType",
+            "condition": ">=",
+            "trigger": 3,
+            "passColor": "pass",
+            "failColor": "fail"
+        },
+        {
+            "name": "GPS Satellites",
+            "type": "auto",
+            "prop": "gps.satellites",
+            "condition": ">=",
+            "trigger": 10,
+            "passColor": "pass",
+            "failColor": "fail"
+        },
+        {
+            "name": "Props attached",
+            "type": "manual",
+            "prop": "props_attached",
+            "passColor": "pass",
+            "failColor": "fail"
+        },
+        {
+            "name": "Aviators on",
+            "type": "manual",
+            "prop": "aviators_on",
+            "passColor": "pass",
+            "failColor": "fail"
+        },
+        {
+            "name": "GPS HDOP OK",
+            "type": "auto",
+            "prop": "gps.eph",
+            "condition": "<",
+            "trigger": 2,
+            "passColor": "pass",
+            "failColor": "fail"
+        },
+        {
+            "name": "Laser OK",
+            "type": "auto",
+            "prop": "laser.status",
+            "condition": "==",
+            "trigger": 3,
+            "passColor": "pass",
+            "failColor": "fail"
+        }
+    ]
+}
