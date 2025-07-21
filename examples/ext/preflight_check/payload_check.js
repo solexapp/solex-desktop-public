@@ -33,7 +33,7 @@ exports.onVehicleConnected = (vehicle, connected) => {
 			VehicleStateData.writeData(vehicle, "laser", laser);
 		}, 15000)
 	} else {
-		clearTieout(timerHandle);
+		clearTimeout(timerHandle);
 	}
 };
 

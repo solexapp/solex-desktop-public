@@ -1,0 +1,5 @@
+[
+    { "id": "mapbox://styles/[your-user-id]/[your-style-id]", "name": "My Style 1" },
+    { "id": "mapbox://styles/[your-user-id]/[your-style-ids]", "name": "My Style 2" }
+]
+
