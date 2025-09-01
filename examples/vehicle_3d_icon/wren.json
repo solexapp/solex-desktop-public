@@ -1,0 +1,10 @@
+{
+    "type": "gltf",
+    "obj": "wren.glb",
+    "scale": 3,
+    "units": "meters",
+    "anchor": "auto",
+    "rotation": { "x": 90, "y": 0, "z": 0 }
+}
+
+
