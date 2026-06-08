@@ -129,6 +129,7 @@ Simple! Open the `examples` folder, and drag each of the folders in it to the `e
 
 - [Location Sources](doc/location_source.md)
 - [External Channels](doc/ext-channels.md)
+- [Popup Windows](doc/popup-window.md)
 
 
 
